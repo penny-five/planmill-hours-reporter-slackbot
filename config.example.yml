@@ -1,0 +1,29 @@
+#
+# Your domain name
+#
+DOMAIN_NAME: YOUR_DOMAIN_NAME_HERE
+#
+# A secret phrase for signing JWT tokens. Generate one for yourself.
+#
+JWT_SECRET: YOUR_JWT_SECRET_HERE
+#
+# Your Slack OAuth2 access token. Create a new Slack app to receive one.
+#
+SLACK_OAUTH_ACCESS_TOKEN: YOUR_SLACK_OAUTH_ACCESS_TOKEN
+#
+# Your slack verification token. Create a new Slack app to receive one.
+#
+SLACK_VERIFICATION_TOKEN: YOUR_SLACK_VERIFICATION_TOKEN
+#
+# Planmill instance name. 
+#
+# For example if your Planmill API address were https://online.planmill.com/foobar then your instance name would be "foobar".
+#
+PLANMILL_INSTANCE_NAME: YOUR_PLANMILL_INSTANCE_NAME_HERE
+#
+# Planmill OAuth2 Client ID and Client Secret.
+#
+# You can register a new Planmill OAuth Client at https://online.planmill.com/your_instance_name/api/registrations.jsp.
+#
+PLANMILL_OAUTH_CLIENT_ID: YOUR_PLANMILL_CLIENT_ID_HERE
+PLANMILL_OAUTH_CLIENT_SECRET: YOUR_PLANMILL_CLIENT_SECRET_HERE

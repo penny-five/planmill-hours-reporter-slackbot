@@ -1,0 +1,5 @@
+node_modules
+*.log
+.serverless
+config.*.yml
+!config.example.yml

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "lib": ["es2015", "es2015.promise", "es2017.object"]
+  }
+}

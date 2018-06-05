@@ -1,0 +1,120 @@
+service: planmill-h-reporter-slackbot
+
+plugins:
+  - serverless-webpack
+  - serverless-api-cloudfront
+
+custom:
+  webpack: webpack.config.ts
+  config: ${file(./config.${opt:stage, 'development'}.yml)}
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'development'}
+  profile: ${opt:profile, 'default'}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 128
+  region: ${self:custom.region}
+  stage: ${self:custom.stage}
+  profile: ${self:custom.profile}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+      Resource: "arn:aws:dynamodb:${self:custom.region}:*:table/PlanmillTokens"
+
+resources:
+  Resources:
+    PlanmillTokens:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: PlanmillTokens
+        AttributeDefinitions:
+          - AttributeName: SlackUserId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: SlackUserId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+functions:
+  health:
+    handler: src/handlers/health-check.default
+    description: Health check. Responds with HTTP 200 OK if the function is deployed.
+    events:
+      - http:
+          path: health
+          method: get
+
+  register:
+    handler: src/handlers/registrations.default
+    description: Starts registration flow for a Slack user.
+    events:
+      - http:
+          path: register
+          method: get
+    environment:
+      DOMAIN_NAME: ${self:custom.config.DOMAIN_NAME}
+      JWT_SECRET: ${self:custom.config.JWT_SECRET}
+      PLANMILL_INSTANCE_NAME: ${self:custom.config.PLANMILL_INSTANCE_NAME}
+      PLANMILL_OAUTH_CLIENT_ID: ${self:custom.config.PLANMILL_OAUTH_CLIENT_ID}
+      PLANMILL_OAUTH_CLIENT_SECRET: ${self:custom.config.PLANMILL_OAUTH_CLIENT_SECRET}
+
+  planmill-oauth-callback:
+    handler: src/handlers/planmill-oauth-callback.default
+    description: Invoked by user-agent as part of OAuth2 authorization code flow with valid Planmill authorization code 
+    events:
+      - http:
+          path: planmill-oauth-callback
+          method: get
+    environment:
+      DOMAIN_NAME: ${self:custom.config.DOMAIN_NAME}
+      JWT_SECRET: ${self:custom.config.JWT_SECRET}
+      PLANMILL_INSTANCE_NAME: ${self:custom.config.PLANMILL_INSTANCE_NAME}
+      PLANMILL_OAUTH_CLIENT_ID: ${self:custom.config.PLANMILL_OAUTH_CLIENT_ID}
+      PLANMILL_OAUTH_CLIENT_SECRET: ${self:custom.config.PLANMILL_OAUTH_CLIENT_SECRET}
+
+  slash-commands:
+    handler: src/handlers/slash-commands.default
+    description: Invoked by Slack when the user interacts with the app through a slash command.
+    events:
+      - http:
+          path: slash-commands
+          method: post
+    environment:
+      DOMAIN_NAME: ${self:custom.config.DOMAIN_NAME}
+      JWT_SECRET: ${self:custom.config.JWT_SECRET}
+      SLACK_OAUTH_ACCESS_TOKEN: ${self:custom.config.SLACK_OAUTH_ACCESS_TOKEN}
+      SLACK_VERIFICATION_TOKEN: ${self:custom.config.SLACK_VERIFICATION_TOKEN}
+      PLANMILL_INSTANCE_NAME: ${self:custom.config.PLANMILL_INSTANCE_NAME}
+      PLANMILL_OAUTH_CLIENT_ID: ${self:custom.config.PLANMILL_OAUTH_CLIENT_ID}
+      PLANMILL_OAUTH_CLIENT_SECRET: ${self:custom.config.PLANMILL_OAUTH_CLIENT_SECRET}
+
+  interactions:
+    handler: src/handlers/interactions.default
+    description: Invoked by Slack when the user interacts with a dialog, message button etc.
+    events:
+      - http:
+          path: interactions
+          method: post
+    environment:
+      SLACK_OAUTH_ACCESS_TOKEN: ${self:custom.config.SLACK_OAUTH_ACCESS_TOKEN}
+
+  options:
+    handler: src/handlers/options.default
+    description: Invoked by Slack when a dropdown in the dialog should be populated.
+    events:
+      - http:
+          path: options
+          method: post
+    environment:
+      DOMAIN_NAME: ${self:custom.config.DOMAIN_NAME}
+      SLACK_OAUTH_ACCESS_TOKEN: ${self:custom.config.SLACK_OAUTH_ACCESS_TOKEN}
+      SLACK_VERIFICATION_TOKEN: ${self:custom.config.SLACK_VERIFICATION_TOKEN}
+      PLANMILL_INSTANCE_NAME: ${self:custom.config.PLANMILL_INSTANCE_NAME}
+      PLANMILL_OAUTH_CLIENT_ID: ${self:custom.config.PLANMILL_OAUTH_CLIENT_ID}
+      PLANMILL_OAUTH_CLIENT_SECRET: ${self:custom.config.PLANMILL_OAUTH_CLIENT_SECRET}
